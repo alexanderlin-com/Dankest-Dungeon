@@ -114,16 +114,16 @@ func (m appModel) updateReady(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.lastMessage = "I have no idea what that input was but ok. Your journey begins anyways!"
 	}
 
-	m.encounterCount = 3 + m.dice.D(10)
-	m.startEncounter()
+	m.encounterCount = 15 + m.dice.D(6)
+	m.tavern = newTavernModel(m.hero, m.dice)
+	m.screen = screenTavern
 	return m, nil
 }
 
 func (m appModel) updateReward(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if _, ok := msg.(tea.KeyMsg); ok {
 		m.lastMessage = ""
-		m.learn = newLearnModel(m.hero, m.dice)
-		m.screen = screenLearnAbility
+		m.advanceEncounter()
 	}
 	return m, nil
 }
@@ -133,7 +133,7 @@ func (m appModel) updateLearnAbility(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.learn = updated.(learnModel)
 
 	if m.learn.done {
-		m.advanceEncounter()
+		m.screen = screenTavern
 		return m, nil
 	}
 	return m, cmd
@@ -143,6 +143,12 @@ func (m appModel) updateTavern(msg tea.Msg) (tea.Model, tea.Cmd) {
 	updated, cmd := m.tavern.Update(msg)
 	m.tavern = updated.(tavernModel)
 
+	if m.tavern.pendingReplace != nil {
+		m.learn = newLearnModel(m.hero, *m.tavern.pendingReplace)
+		m.tavern.pendingReplace = nil
+		m.screen = screenLearnAbility
+		return m, nil
+	}
 	if m.tavern.left {
 		m.startEncounter()
 		return m, nil
@@ -192,8 +198,8 @@ func (m *appModel) advanceEncounter() {
 	switch {
 	case m.encounterIndex >= m.encounterCount:
 		m.screen = screenVictory
-	case m.dice.D(3) == 0:
-		m.tavern = newTavernModel(m.hero)
+	case m.dice.D(4) == 0:
+		m.tavern = newTavernModel(m.hero, m.dice)
 		m.screen = screenTavern
 	default:
 		m.startEncounter()
@@ -229,8 +235,8 @@ func (m appModel) View() string {
 			"When your HitPoints (HP) reach zero, you die.\n" +
 			"You also slowly gain fatigue as you battle.\n\n" +
 			"You deal less damage the more fatigue you have.\n\n" +
-			fmt.Sprintf("You have no fixed class — after every victory you may learn a new move, up to %d at a time.\n\n", maxAbilities) +
-			"Along your journey, you may stop by a tavern to rest.\n\n" +
+			"You have no fixed class - your identity is whichever moves you've picked up.\n\n" +
+			fmt.Sprintf("Along your journey, you may stop by a tavern to rest, shop, and meet a trainer who'll teach you a new move for gold - you always have exactly %d moves.\n\n", maxAbilities) +
 			m.hero.StatusText()
 		return renderMessageScreen("Rules", body, "press any key to continue")
 	case screenReady:

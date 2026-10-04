@@ -10,13 +10,30 @@ type Hero struct {
 	Fatigue   int
 	Gold      int
 	Abilities []Ability
+
+	// NextAttackBonus and NextDamageReduction are single-shot: set by
+	// Brace/Guard Up, consumed (and reset to 0) the next time they're
+	// relevant - the hero's next outgoing hit, or the next hit taken.
+	NextAttackBonus     int
+	NextDamageReduction int
 }
 
-// NewHero builds a bare hero with a single random starting ability.
+// startingGold is what a fresh hero has to spend at the tavern before
+// the journey even begins.
+const startingGold = 40
+
+// NewHero builds a bare hero with every ability slot filled with the
+// weak starting Punch, and enough gold to learn something better.
 func NewHero(d *Dice) *Hero {
+	abilities := make([]Ability, maxAbilities)
+	for i := range abilities {
+		abilities[i] = newPunch(d)
+	}
+
 	return &Hero{
 		Combatant: Combatant{Name: "Hero", HP: 100, MaxHP: 100},
-		Abilities: randomAbilityChoices(d, nil, 1),
+		Abilities: abilities,
+		Gold:      startingGold,
 	}
 }
 

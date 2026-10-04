@@ -47,3 +47,20 @@ func TestRandomAbilityChoicesStopsWhenPoolExhausted(t *testing.T) {
 		t.Fatalf("expected 0 choices once the whole pool is known, got %d", len(none))
 	}
 }
+
+func TestNewHeroStartsWithPunchesAndGold(t *testing.T) {
+	d := NewDice()
+	hero := NewHero(d)
+
+	if len(hero.Abilities) != maxAbilities {
+		t.Fatalf("expected %d starting abilities, got %d", maxAbilities, len(hero.Abilities))
+	}
+	for _, a := range hero.Abilities {
+		if a.Name != "Punch" {
+			t.Fatalf("expected every starting slot to be Punch, got %q", a.Name)
+		}
+	}
+	if hero.Gold != startingGold {
+		t.Fatalf("expected starting gold %d, got %d", startingGold, hero.Gold)
+	}
+}

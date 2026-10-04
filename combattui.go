@@ -97,6 +97,11 @@ func (m combatModel) applyEnemyAttack() (tea.Model, tea.Cmd) {
 	if missed {
 		m.appendLog(fmt.Sprintf("The enemy %s misses!", m.enemy.Name))
 	} else {
+		dmg -= m.hero.NextDamageReduction
+		m.hero.NextDamageReduction = 0
+		if dmg < 0 {
+			dmg = 0
+		}
 		m.hero.TakeDamage(dmg)
 		m.appendLog(fmt.Sprintf("The enemy %s hits for %d damage!", m.enemy.Name, dmg))
 	}

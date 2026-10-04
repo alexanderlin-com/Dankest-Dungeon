@@ -4,6 +4,9 @@ package main
 type Enemy struct {
 	Combatant
 	Gold int
+
+	// Marked is set by Hex and consumed by Curse Strike for a bonus.
+	Marked bool
 }
 
 // EnemyTemplate is the stat block for one kind of enemy.
